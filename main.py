@@ -5,6 +5,21 @@ import os
 import webbrowser
 import click
 
+# def prepare_text(max, text):
+#     breaked = ""
+#     striped = text.split()
+#     line = 0
+
+#     for (i, c) in enumerate(striped):
+#         line += len(c)
+#         if line > max:
+#             line = 0
+#             breaked += (f"{striped[i - 1]}\n")
+#         else:
+#             breaked += (f"{c} ")
+
+#     print(breaked)
+
 def uptweet(tweets, curr):
     if curr > 0: return curr - 1
     else: return len(tweets) - 1
@@ -46,18 +61,25 @@ def main():
     curses.curs_set(0)
     s.timeout(16)
 
-    users = json.load(open('profiles.json', 'r'))["profiles"]
+    users = []
+
+    if os.path.exists("profiles.json"):
+        users = json.load(open('profiles.json', 'r'))["profiles"]
+    else:
+        curses.endwin()
+        return print("you need set a list of @, use --profiles")
+
     tweet_curr = 0
     user_curr = 0
     quit = False
     key = ""
     tweets = []
-    
+
     get_tweets(users)
 
     while not quit:
         s.erase()
-    
+
         lines = open(f'./tweets/{users[user_curr]}.json', 'r').readlines()
 
         for index, user_c in enumerate(users):
@@ -67,16 +89,20 @@ def main():
                 s.addstr(f'@{user_c} ', curses.A_DIM)
 
         for index, line in enumerate(lines):
-            tweets = json.loads(line)
+            tweet = json.loads(line)
+            line = f'{tweet["date"]} - {tweet["tweet"]}\n'
 
             s.move(index + 2, 0)
 
             if tweet_curr == index:
-                s.addstr(f'{tweets["date"]} - {tweets["tweet"]}\n', curses.A_REVERSE)
+                s.addstr(line, curses.A_REVERSE)
 
-                if key == ord('\n'): webbrowser.open(f'https://twitter.com/{users[user_curr]}/status/{tweets["id"]}') 
+                if key == ord('\n'):
+                    webbrowser.open(
+                        f'https://twitter.com/{users[user_curr]}/status/{tweets["id"]}'
+                    )
             else:
-                s.addstr(f'{tweets["date"]} - {tweets["tweet"]}\n')
+                s.addstr(line)
 
         if key == ord('Q') or key == ord('q'): quit = True
 
@@ -95,25 +121,41 @@ def main():
 
     curses.endwin()
 
-
 @click.command()
 @click.option('--profiles', '--p', required=False)
 @click.option('--show', '--s', required=False, is_flag=True)
-
-def args(profiles, show):
+@click.option('--clear', '--c', required=False, is_flag=True)
+def args(profiles, show, clear):
     if profiles:
         profiles = [x.strip() for x in profiles.split(',')]
-        jsonprofiles = json.dumps({ "profiles": profiles }, indent=2)
+
+        if os.path.exists("profiles.json"):
+            profiles_saves = json.load(open("profiles.json", 'r'))["profiles"]
+            profiles = profiles + list(set(profiles_saves) - set(profiles))
+
+        jsonprofiles = json.dumps({"profiles": profiles}, indent=2)
+
         file = open("profiles.json", "w")
         file.write(jsonprofiles)
         file.close()
         main()
+
     elif show:
         file = open("profiles.json", "r")
         click.echo(json.loads(file.read())["profiles"])
         file.close()
-    else: main()
-    
+
+    elif clear:
+        if os.path.exists("profiles.json"):
+            os.remove(open("profiles.json", 'r'))
+
+        for f in os.listdir("./tweets"):
+            if os.path.isfile:
+                os.remove(f"./tweets/{f}")
+
+    else:
+        main()
+
 
 if __name__ == '__main__':
     args()
