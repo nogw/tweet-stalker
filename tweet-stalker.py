@@ -99,7 +99,7 @@ def main():
 
                 if key == ord('\n'):
                     webbrowser.open(
-                        f'https://twitter.com/{users[user_curr]}/status/{tweets["id"]}'
+                        f'https://twitter.com/{users[user_curr]}/status/{tweet["id"]}'
                     )
             else:
                 s.addstr(line)
@@ -125,6 +125,7 @@ def main():
 @click.option('--profiles', '--p', required=False)
 @click.option('--show', '--s', required=False, is_flag=True)
 @click.option('--clear', '--c', required=False, is_flag=True)
+
 def args(profiles, show, clear):
     if profiles:
         profiles = [x.strip() for x in profiles.split(',')]
