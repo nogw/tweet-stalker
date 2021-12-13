@@ -121,7 +121,7 @@ def args(profiles, show, clear):
     if profiles:
         profiles = [x.strip() for x in profiles.split(',')]
 
-        if os.path.exists("profiles.json"):
+        if os.path.exists("profiles.json") & os.stat("profiles.json").st_size != 0:
             profiles_saves = json.load(open("profiles.json", 'r'))["profiles"]
             profiles = profiles + list(set(profiles_saves) - set(profiles))
 
