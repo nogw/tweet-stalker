@@ -5,36 +5,26 @@ import os
 import webbrowser
 import click
 
-# def prepare_text(max, text):
-#     breaked = ""
-#     striped = text.split()
-#     line = 0
-
-#     for (i, c) in enumerate(striped):
-#         line += len(c)
-#         if line > max:
-#             line = 0
-#             breaked += (f"{striped[i - 1]}\n")
-#         else:
-#             breaked += (f"{c} ")
-
-#     print(breaked)
 
 def uptweet(tweets, curr):
     if curr > 0: return curr - 1
     else: return len(tweets) - 1
 
+
 def downtweet(tweets, curr):
     if curr < len(tweets) - 1: return curr + 1
     else: return 0
+
 
 def leftuser(users, curr):
     if curr > 0: return curr - 1
     else: return len(users) - 1
 
+
 def rightuser(users, curr):
     if curr < len(users) - 1: return curr + 1
     else: return 0
+
 
 def get_tweets(users):
     c = twint.Config()
@@ -55,6 +45,7 @@ def get_tweets(users):
 
         twint.run.Search(c)
 
+
 def main():
     s = curses.initscr()
     curses.noecho()
@@ -63,7 +54,7 @@ def main():
 
     users = []
 
-    if os.path.exists("profiles.json"):
+    if os.path.exists("profiles.json") & os.stat("profiles.json").st_size != 0:
         users = json.load(open('profiles.json', 'r'))["profiles"]
     else:
         curses.endwin()
@@ -73,7 +64,6 @@ def main():
     user_curr = 0
     quit = False
     key = ""
-    tweets = []
 
     get_tweets(users)
 
@@ -90,7 +80,7 @@ def main():
 
         for index, line in enumerate(lines):
             tweet = json.loads(line)
-            line = f'{tweet["date"]} - {tweet["tweet"]}\n'
+            line = f'{tweet["date"]} : {tweet["time"][:5]} - {tweet["tweet"]}\n'
 
             s.move(index + 2, 0)
 
@@ -110,6 +100,7 @@ def main():
         elif key == ord('B'): tweet_curr = downtweet(lines, tweet_curr)
         elif key == ord('D'): user_curr = leftuser(users, user_curr)
         elif key == ord('C'): user_curr = rightuser(users, user_curr)
+        elif key == ord('R'): get_tweets(users)
 
         key_press = s.getch()
 
@@ -121,11 +112,11 @@ def main():
 
     curses.endwin()
 
+
 @click.command()
 @click.option('--profiles', '--p', required=False)
 @click.option('--show', '--s', required=False, is_flag=True)
 @click.option('--clear', '--c', required=False, is_flag=True)
-
 def args(profiles, show, clear):
     if profiles:
         profiles = [x.strip() for x in profiles.split(',')]
@@ -147,8 +138,7 @@ def args(profiles, show, clear):
         file.close()
 
     elif clear:
-        if os.path.exists("profiles.json"):
-            os.remove(open("profiles.json", 'r'))
+        open("profiles.json", "w").close()
 
         for f in os.listdir("./tweets"):
             if os.path.isfile:
